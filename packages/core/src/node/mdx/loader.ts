@@ -33,7 +33,10 @@ export interface PageMeta {
   frontmatter?: Record<string, any>;
 }
 
-export async function triggerReload() {
+export async function updateSiteDataRuntimeModule(
+  modulePath: string,
+  pageMeta: PageMeta,
+) {
   const siteDataModulePath = path.join(
     TEMP_DIR,
     'runtime',
@@ -47,6 +50,10 @@ export async function triggerReload() {
     `export default ${JSON.stringify({
       ...siteData,
       timestamp: Date.now().toString(),
+      pages: siteData.pages.map(page =>
+        // Update page meta if the page is updated
+        page._filepath === modulePath ? { ...page, ...pageMeta } : page,
+      ),
     })}`,
   );
 }
@@ -67,7 +74,7 @@ export function createCheckPageMetaUpdateFn() {
         logger.info(
           `⭐️ Page metadata changed, rspress will trigger page reload...`,
         );
-        await triggerReload();
+        await updateSiteDataRuntimeModule(modulePath, pageMeta);
       });
     }
   };
@@ -99,10 +106,15 @@ export default async function mdxLoader(
     true,
   );
 
-  // preprocessor
-  const preprocessedContent = escapeMarkdownHeadingIds(
-    await flattenMdxContent(content, filepath, alias as Record<string, string>),
+  const { flattenContent, deps } = await flattenMdxContent(
+    content,
+    filepath,
+    alias as Record<string, string>,
   );
+  // preprocessor
+  const preprocessedContent = escapeMarkdownHeadingIds(flattenContent);
+
+  deps.forEach(dep => context.addDependency(dep));
 
   let enableMdxRs;
   const mdxRs = config?.markdown?.mdxRs ?? true;
@@ -141,7 +153,7 @@ export default async function mdxLoader(
         title: string;
       };
       pageMeta = {
-        toc: compilationMeta.toc,
+        ...compilationMeta,
         title: frontmatter.title || compilationMeta.title || '',
         frontmatter,
       } as PageMeta;

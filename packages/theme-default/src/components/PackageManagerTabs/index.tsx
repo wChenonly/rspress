@@ -33,9 +33,9 @@ function normalizeCommand(command: string): string {
     .join(' ');
   if (pureCommand === 'yarn install' || pureCommand === 'bun install') {
     return command;
-  } else {
-    return command.replace('install', 'add');
   }
+
+  return command.replace('install', 'add');
 }
 
 export function PackageManagerTabs({
@@ -99,7 +99,10 @@ export function PackageManagerTabs({
       {Object.entries(commandInfo).map(([key, value]) => (
         <Tab key={key}>
           <Pre>
-            <Code className="language-js">{value}</Code>
+            {/* For this case, we can specify to highlight the code in runtime instead of compile time */}
+            <Code className="language-js" codeHighlighter="prism">
+              {value}
+            </Code>
           </Pre>
         </Tab>
       ))}

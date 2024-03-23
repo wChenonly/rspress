@@ -2,10 +2,9 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { useLocation } from '@rspress/runtime';
 import MenuIcon from '@theme-assets/menu';
 import ArrowRight from '@theme-assets/arrow-right';
-import { SideBar } from '../Sidebar';
+import { Sidebar, Toc } from '@theme';
 import './index.scss';
-import { Toc } from '../Toc';
-import { UISwitchResult } from '#theme/logic/useUISwitch';
+import { UISwitchResult } from '../../logic/useUISwitch';
 import { SvgWrapper } from '../SvgWrapper';
 import { CSSTransition } from 'react-transition-group';
 
@@ -102,7 +101,7 @@ export function SideMenu({
         </CSSTransition>
       </div>
       {/* Sidebar Component */}
-      <SideBar
+      <Sidebar
         isSidebarOpen={isSidebarOpen}
         beforeSidebar={beforeSidebar}
         afterSidebar={afterSidebar}

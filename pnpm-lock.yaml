@@ -75,6 +75,19 @@ importers:
         specifier: 0.34.1
         version: 0.34.1(playwright@1.33.0)
 
+  e2e/fixtures/api-docgen:
+    dependencies:
+      '@rspress/plugin-api-docgen':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-api-docgen
+      rspress:
+        specifier: workspace:*
+        version: link:../../../packages/cli
+    devDependencies:
+      '@types/node':
+        specifier: ^14
+        version: 14.0.0
+
   e2e/fixtures/auto-nav-sidebar:
     dependencies:
       rspress:
@@ -96,6 +109,16 @@ importers:
         version: 14.0.0
 
   e2e/fixtures/custom-icon:
+    dependencies:
+      rspress:
+        specifier: workspace:*
+        version: link:../../../packages/cli
+    devDependencies:
+      '@types/node':
+        specifier: ^14
+        version: 14.0.0
+
+  e2e/fixtures/custom-id:
     dependencies:
       rspress:
         specifier: workspace:*
@@ -231,6 +254,16 @@ importers:
         version: 14.0.0
 
   e2e/fixtures/production:
+    dependencies:
+      rspress:
+        specifier: workspace:*
+        version: link:../../../packages/cli
+    devDependencies:
+      '@types/node':
+        specifier: ^14
+        version: 14.0.0
+
+  e2e/fixtures/replace-rules:
     dependencies:
       rspress:
         specifier: workspace:*
@@ -791,8 +824,8 @@ importers:
   packages/plugin-playground:
     dependencies:
       '@mdx-js/mdx':
-        specifier: 2.2.1
-        version: 2.2.1
+        specifier: 2.3.0
+        version: 2.3.0
       '@monaco-editor/react':
         specifier: ~4.4.6
         version: 4.4.6(monaco-editor@0.47.0)(react-dom@18.2.0)(react@18.2.0)
@@ -861,8 +894,8 @@ importers:
   packages/plugin-preview:
     dependencies:
       '@mdx-js/mdx':
-        specifier: 2.2.1
-        version: 2.2.1
+        specifier: 2.3.0
+        version: 2.3.0
       '@rsbuild/core':
         specifier: 0.5.1
         version: 0.5.1
@@ -3083,30 +3116,6 @@ packages:
       '@mdx-js/mdx': 2.3.0
       source-map: 0.7.4
       webpack: 5.88.2
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
-  /@mdx-js/mdx@2.2.1:
-    resolution: {integrity: sha512-hZ3ex7exYLJn6FfReq8yTvA6TE53uW9UHJQM9IlSauOuS55J9y8RtA7W+dzp6Yrzr00/U1sd7q+Wf61q6SfiTQ==}
-    dependencies:
-      '@types/estree-jsx': 1.0.0
-      '@types/mdx': 2.0.6
-      estree-util-build-jsx: 2.2.2
-      estree-util-is-identifier-name: 2.1.0
-      estree-util-to-js: 1.2.0
-      estree-walker: 3.0.3
-      hast-util-to-estree: 2.3.3
-      markdown-extensions: 1.1.1
-      periscopic: 3.1.0
-      remark-mdx: 2.3.0
-      remark-parse: 10.0.1
-      remark-rehype: 10.1.0
-      unified: 10.1.2
-      unist-util-position-from-estree: 1.1.2
-      unist-util-stringify-position: 3.0.3
-      unist-util-visit: 4.1.1
-      vfile: 5.3.7
     transitivePeerDependencies:
       - supports-color
     dev: false

@@ -6,7 +6,7 @@
 
 Used to customize the configurations of Rsbuild. For detailed configurations, please refer to [Rsbuild - Config](https://rsbuild.dev/config/).
 
-For example, change the output directory to `doc_dist`:
+- Example: Use [output.distPath](https://rsbuild.dev/config/output/dist-path) to change the output directory to `doc_dist`:
 
 ```ts title="rspress.config.ts"
 export default defineConfig({
@@ -14,6 +14,36 @@ export default defineConfig({
     output: {
       distPath: {
         root: 'doc_dist',
+      },
+    },
+  },
+});
+```
+
+- Example: Use [tools.rspack](https://rsbuild.dev/config/tools/rspack) to modify the Rspack configuration, such as registering a webpack or Rspack plugin:
+
+```ts title="rspress.config.ts"
+export default defineConfig({
+  builderConfig: {
+    tools: {
+      rspack: async config => {
+        const { default: ESLintPlugin } = await import('eslint-webpack-plugin');
+        config.plugins?.push(new ESLintPlugin());
+        return config;
+      },
+    },
+  },
+});
+```
+
+- Example: Use [source.alias](https://rsbuild.dev/config/source/alias) to configure path aliases:
+
+```ts title="rspress.config.ts"
+export default defineConfig({
+  builderConfig: {
+    source: {
+      alias: {
+        '@common': './src/common',
       },
     },
   },
@@ -67,6 +97,27 @@ export default defineConfig({
       title: 'My Website',
       type: 'website',
       // ...options
+    }),
+  ],
+});
+```
+
+You can also override the built-in plugins [@rsbuild/plugin-react](https://rsbuild.dev/plugins/list/plugin-react), [@rsbuild/plugin-sass](https://rsbuild.dev/plugins/list/plugin-sass) and [@rsbuild/plugin-less](https://rsbuild.dev/plugins/list/plugin-less), and customize relevant plugin options.
+
+- Example: Modify related options of built-in [@rsbuild/plugin-less](https://rsbuild.dev/plugins/list/plugin-less) plugin
+
+```ts title="rspress.config.ts"
+import { defineConfig } from 'rspress/config';
+import { pluginLess } from '@rsbuild/plugin-less';
+
+export default defineConfig({
+  builderPlugins: [
+    pluginLess({
+      lessLoaderOptions: {
+        lessOptions: {
+          math: 'always',
+        },
+      },
     }),
   ],
 });
@@ -206,9 +257,26 @@ Please set `markdown.mdxRs` to `false` when configuring `globalComponents`, othe
 
 ### markdown.highlightLanguages
 
-- Type: `(string | [string, string])[]`
+- Type: `[string, string][]`
+- Default:
 
-Register the languages that need to be highlighted. The default supported languages include `js`, `jsx`, `ts`, `tsx`, `json`, `css`, `scss`, `less`, `xml`, `diff`, `yaml`, `md`, `mdx`, `bash`. You can extend based on these languages. For example:
+```js
+const DEFAULT_HIGHLIGHT_LANGUAGES = [
+  ['js', 'javascript'],
+  ['ts', 'typescript'],
+  ['jsx', 'tsx'],
+  ['xml', 'xml-doc'],
+  ['md', 'markdown'],
+  ['mdx', 'tsx'],
+];
+```
+
+Rspress supports automatic import of highlighted languages and makes some language aliases by default.
+
+- By default, it is implemented based on [Prism.js](https://prismjs.com/). You can also switch to Shiki through [@rspress/plugin-shiki](/plugin/official-plugins/shiki).
+- The default configuration alias languages include `js`, `jsx`, `ts`, `tsx`, `xml`, `md`, `mdx`.
+
+You can also extend these default aliases, such as:
 
 ```ts title="rspress.config.ts"
 import { defineConfig } from 'rspress/config';
@@ -217,8 +285,6 @@ import path from 'path';
 export default defineConfig({
   markdown: {
     highlightLanguages: [
-      'ejs',
-      'go',
       // Alias as md, full name as markdown
       ['md', 'markdown'],
     ],
@@ -226,4 +292,4 @@ export default defineConfig({
 });
 ```
 
-Each language config supports both `string` and `[string, string]` formats. In the array format, the former is the alias of the language, and the latter is the full name of the language. You can go to the [file list](https://github.com/react-syntax-highlighter/react-syntax-highlighter/tree/master/src/languages/prism) to view all supported language full names.
+The alias of each language is configured in the format of `[string, string]`. The former is the alias of the language, and the latter is the full name of the language. You can go to [File List](https://github.com/react-syntax-highlighter/react-syntax-highlighter/tree/master/src/languages/prism) to view the full names of all supported languages.

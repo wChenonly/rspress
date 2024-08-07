@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join } from 'node:path';
 import net from 'node:net';
 import {
   type RouteMeta,
@@ -7,6 +7,7 @@ import {
 } from '@rspress/shared';
 import {
   type RsbuildConfig,
+  type RsbuildPluginAPI,
   createRsbuild,
   mergeRsbuildConfig,
 } from '@rsbuild/core';
@@ -134,6 +135,12 @@ export function pluginPreview(options?: Options): RspressPlugin {
       const rsbuildInstance = await createRsbuild({
         rsbuildConfig,
       });
+
+      const { pluginSass } = await import('@rsbuild/plugin-sass');
+      const { pluginLess } = await import('@rsbuild/plugin-less');
+
+      rsbuildInstance.addPlugins([pluginSass(), pluginLess()]);
+
       if (framework === 'solid') {
         rsbuildInstance.addPlugins([
           pluginBabel({
@@ -169,9 +176,9 @@ export function pluginPreview(options?: Options): RspressPlugin {
       plugins: [
         {
           name: 'close-demo-server',
-          setup: api => {
+          setup: (api: RsbuildPluginAPI) => {
             api.modifyRsbuildConfig(config => {
-              if (config.output?.targets?.every(target => target === 'web')) {
+              if (config.output?.target === 'web') {
                 // client build config
                 clientConfig = config;
               }
@@ -187,6 +194,8 @@ export function pluginPreview(options?: Options): RspressPlugin {
       if (!isProd) {
         pageData.devPort = port;
       }
+      // highlightLanguages analysis is built-in in mdx-rs, we need to add extraHighlightLanguages in preview plugin which using mdx-js to perform code block
+      pageData.extraHighlightLanguages = previewLanguages;
     },
     markdown: {
       remarkPlugins: [

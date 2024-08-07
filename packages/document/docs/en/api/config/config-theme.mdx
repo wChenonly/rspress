@@ -201,6 +201,8 @@ export interface Footer {
 }
 ```
 
+`message` is a string that can contain HTML content. This string will be inserted into the footer using `dangerouslySetInnerHTML`, allowing you to pass in HTML template tags to design your footer.
+
 For example:
 
 ```ts title="rspress.config.ts"
@@ -209,7 +211,8 @@ import { defineConfig } from 'rspress/config';
 export default defineConfig({
   themeConfig: {
     footer: {
-      message: 'This is a footer',
+      message:
+        '<p>This is a footer with a <a href="https://example.com">link</a> and <strong>bold text</strong></p>',
     },
   },
 });
@@ -294,7 +297,7 @@ export default defineConfig({
 - Type: `string`
 - Default: `Search Docs`
 
-The placeholder text of the search box. for example:
+The placeholder text of the search box. For example:
 
 ```ts title="rspress.config.ts"
 import { defineConfig } from 'rspress/config';
@@ -306,13 +309,47 @@ export default defineConfig({
 });
 ```
 
+## searchNoResultsText
+
+- Type: `string`
+- Default: `No results for`
+
+The text of no search result. For example:
+
+```ts title="rspress.config.ts"
+import { defineConfig } from 'rspress/config';
+
+export default defineConfig({
+  themeConfig: {
+    searchNoResultsText: 'No results for',
+  },
+});
+```
+
+## searchSuggestedQueryText
+
+- Type: `string`
+- Default: `Please try again with a different keyword`
+
+The text of suggested query text when no search result. For example:
+
+```ts title="rspress.config.ts"
+import { defineConfig } from 'rspress/config';
+
+export default defineConfig({
+  themeConfig: {
+    searchSuggestedQueryText: 'Please search again',
+  },
+});
+```
+
 ## socialLinks
 
 - Type: `Array`
 - Default: `[]`
 
 You can add related links through the following config, such as `github` links, `twitter` links, etc.
-Related links support three modes: `link mode` `text mode` `image mode`, for example:
+Related links support four modes: `link mode` `text mode` `image mode` `dom mode`, for example:
 
 ```ts title="rspress.config.ts"
 import { defineConfig } from 'rspress/config';
@@ -335,6 +372,12 @@ export default defineConfig({
         mode: 'img',
         content: '/qrcode.png',
       },
+      {
+        icon: 'github',
+        mode: 'dom',
+        content:
+          '<img src="https://lf3-static.bytednsdoc.com/obj/eden-cn/rjhwzy/ljhwZthlaukjlkulzlp/rspress/rspress-navbar-logo-0904.png" alt="logo" id="logo" class="mr-4 rspress-logo dark:hidden">',
+      },
     ],
   },
 });
@@ -343,6 +386,7 @@ export default defineConfig({
 - When in `link` mode, click the icon to jump to the link.
 - When in `text` mode, when the mouse moves over the icon, a pop-up box will be displayed, and the content of the pop-up box is the entered text
 - When in the `img` mode, moving the mouse over the icon will display a bullet box, and the content of the bullet box is the specified picture. It should be noted that the picture needs to be placed in the `public` directory.
+- When in dom mode, html to render can be passed directly into the content field. Use '' for wrapping
 
 Related links support the following types of images, which can be selected through the icon attribute:
 
@@ -442,6 +486,10 @@ export interface LocaleConfig {
   nextPageText?: string;
   // Search box placeholder text
   searchPlaceholderText?: string;
+  // The text of no search result
+  searchNoResultsText?: string;
+  // The text of suggested query text when no search result
+  searchSuggestedQueryText?: string;
 }
 ```
 

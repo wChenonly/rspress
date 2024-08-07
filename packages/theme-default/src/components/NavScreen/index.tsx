@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { disableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock';
-import { NavItem, DefaultThemeConfig } from '@rspress/shared';
+import type { NavItem, DefaultThemeConfig } from '@rspress/shared';
 import type { SiteData } from '@rspress/shared';
 import { NoSSR } from '@rspress/runtime';
 import { NavMenuSingleItem } from '../Nav/NavMenuSingleItem';
@@ -23,9 +23,7 @@ interface Props {
 const NavScreenTranslations = () => {
   const translationMenuData = useTranslationMenuData();
   return (
-    <div
-      className={`${styles.navTranslations} flex text-sm font-bold justify-center`}
-    >
+    <div className="flex text-sm font-bold justify-center">
       <div className="mx-1.5 my-1">
         <NavScreenMenuGroup {...translationMenuData} />
       </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SocialLink } from '@rspress/shared';
+import type { SocialLink } from '@rspress/shared';
 import styles from './index.module.scss';
 import presetIcons from './presetIcons';
 
@@ -80,6 +80,28 @@ export const LinkContent = (props: ILinkContentComp) => {
             }}
           >
             <img src={content} alt="img" />
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+  if (mode === 'dom') {
+    return (
+      <div
+        className={`${styles.socialLinksIcon} cursor-pointer relative`}
+        onMouseEnter={mouseEnterIcon}
+        onMouseLeave={mouseLeavePopper}
+      >
+        {IconComp}
+        {contentVisible ? (
+          <div
+            className="break-all z-[1] p-3 absolute right-0 bg-white dark:bg-dark rounded-xl"
+            style={{
+              boxShadow: 'var(--rp-shadow-3)',
+              ...popperStyle,
+            }}
+          >
+            <div dangerouslySetInnerHTML={{ __html: content }} />
           </div>
         ) : null}
       </div>

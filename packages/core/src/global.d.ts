@@ -33,9 +33,8 @@ declare module 'virtual-search-hooks' {
 }
 
 declare module 'virtual-prism-languages' {
-  const languagesInfo: Record<string, unknown>;
-
-  export default languagesInfo;
+  export const aliases: Record<string, string[]>;
+  export const languages: Record<string, unknown>;
 }
 
 declare module '*.module.scss' {

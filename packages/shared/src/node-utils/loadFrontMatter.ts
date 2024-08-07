@@ -1,21 +1,21 @@
-import path from 'path';
+import path from 'node:path';
 import grayMatter from 'gray-matter';
 import { logger } from '../logger';
 
-export function loadFrontMatter(
+export function loadFrontMatter<
+  TFrontmatter extends Record<string, unknown> = Record<string, string>,
+>(
   source: string,
   filepath: string,
   root: string,
   outputWarning = false,
 ): {
-  frontmatter: Record<string, string>;
+  frontmatter: TFrontmatter;
   content: string;
 } {
-  let frontmatter: Record<string, string> = {};
-  let content = '';
-
   try {
-    ({ data: frontmatter, content } = grayMatter(source));
+    const { content, data } = grayMatter(source);
+    return { content, frontmatter: data as TFrontmatter };
   } catch (e: any) {
     if (outputWarning) {
       logger.warn(
@@ -27,5 +27,5 @@ export function loadFrontMatter(
     }
   }
 
-  return { frontmatter, content };
+  return { content: '', frontmatter: {} as TFrontmatter };
 }

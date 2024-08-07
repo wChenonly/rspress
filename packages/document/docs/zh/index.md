@@ -1,20 +1,23 @@
 ---
 pageType: home
+titleSuffix: '基于 Rspack 的静态站点生成器'
 
 hero:
   name: Rspress
-  text: 基于 Rspack 的静态站点生成器
-  tagline: 简单、高性能、易于扩展。
+  text: |
+    快如闪电的
+    静态站点生成器
+  tagline: 简单、高性能、易于扩展
   image:
     src: /rspress-logo.webp
     alt: Rspress Logo
   actions:
     - theme: brand
       text: 介绍
-      link: /zh/guide/start/introduction
+      link: /guide/start/introduction
     - theme: alt
       text: 快速开始
-      link: /zh/guide/start/getting-started
+      link: /guide/start/getting-started
 
 features:
   - title: 极高的编译性能

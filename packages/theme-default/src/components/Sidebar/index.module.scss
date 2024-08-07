@@ -21,12 +21,10 @@
   background: var(--rp-c-bg);
 }
 
-.sidebarContainer {
-  padding: 0 12px 96px 0;
-}
-
 .sidebarContent {
+  overflow-y: auto;
   overflow-x: hidden;
+  max-height: calc(100% - var(--rp-nav-height));
 }
 
 .sidebar.open {
@@ -60,10 +58,6 @@
   .sidebar {
     width: var(--rp-sidebar-width);
   }
-
-  .sidebarContainer {
-    padding-left: 0;
-  }
 }
 
 .menuLink {
@@ -76,6 +70,7 @@
 }
 
 .menuItem:hover {
+  color: var(--rp-c-text-1);
   background-color: var(--rp-c-bg-mute);
   transition: all 0.2s;
 }
@@ -106,7 +101,7 @@
 
 .menuItemActive {
   background-color: var(--rp-c-brand-tint);
-  color: var(--rp-c-brand);
+  color: var(--rp-c-link);
   font-weight: bolder;
   position: relative;
 }

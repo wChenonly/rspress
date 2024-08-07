@@ -8,7 +8,12 @@ import {
 } from '@rspress/runtime';
 import { HelmetProvider } from 'react-helmet-async';
 import React, { useContext, useLayoutEffect } from 'react';
-import { Header, PageData, cleanUrl, MDX_REGEXP } from '@rspress/shared';
+import {
+  type Header,
+  type PageData,
+  cleanUrl,
+  MDX_REGEXP,
+} from '@rspress/shared';
 import globalComponents from 'virtual-global-components';
 import Theme from '@theme';
 import 'virtual-global-styles';
@@ -70,6 +75,34 @@ export async function initPageData(routePath: string): Promise<PageData> {
     };
   }
 
+  let lang = siteData.lang || '';
+  let version = siteData.multiVersion?.default || '';
+
+  if (siteData.lang && typeof window !== 'undefined') {
+    const path = location.pathname
+      .replace(siteData.base, '')
+      .split('/')
+      .slice(0, 2);
+
+    if (siteData.locales.length) {
+      const result = siteData.locales.find(({ lang }) => path.includes(lang));
+
+      if (result) {
+        lang = result.lang;
+      }
+    }
+
+    if (siteData.multiVersion.versions) {
+      const result = siteData.multiVersion.versions.find(version =>
+        path.includes(version),
+      );
+
+      if (result) {
+        version = result;
+      }
+    }
+  }
+
   // 404 Page
   return {
     siteData,
@@ -77,11 +110,11 @@ export async function initPageData(routePath: string): Promise<PageData> {
       pagePath: '',
       pageType: '404',
       routePath: '/404',
-      lang: siteData.lang || '',
+      lang,
       frontmatter: {},
       title: '404',
       toc: [],
-      version: '',
+      version,
       _filepath: '',
       _relativePath: '',
     },

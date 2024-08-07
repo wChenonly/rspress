@@ -1,4 +1,4 @@
-import { NavItem } from '@rspress/shared';
+import type { NavItem } from '@rspress/shared';
 import { useLocation, usePageData } from '@rspress/runtime';
 import { Search } from '@theme';
 import { useEffect, useState } from 'react';
@@ -140,9 +140,7 @@ export function Nav(props: NavProps) {
           {beforeNavTitle}
           <NavBarTitle />
           {afterNavTitle}
-          <div
-            className={`${styles.content} flex flex-1 justify-end items-center`}
-          >
+          <div className="flex flex-1 justify-end items-center">
             {leftNav()}
             {rightNav()}
             {afterNavMenu}

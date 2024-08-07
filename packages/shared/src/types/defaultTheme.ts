@@ -82,6 +82,14 @@ export interface Config {
    */
   searchPlaceholderText?: string;
   /**
+   * The text of no search result
+   */
+  searchNoResultsText?: string;
+  /**
+   * The text of suggested query text when no search result
+   */
+  searchSuggestedQueryText?: string;
+  /**
    * The behavior of hiding navbar
    */
   hideNavbar?: 'always' | 'auto' | 'never';
@@ -126,6 +134,8 @@ export interface LocaleConfig {
   sourceCodeText?: string;
   langRoutePrefix?: string;
   searchPlaceholderText?: string;
+  searchNoResultsText?: string;
+  searchSuggestedQueryText?: string;
 }
 // nav -----------------------------------------------------------------------
 export type Nav = NavItem[] | { [key: string]: NavItem[] };
@@ -185,6 +195,7 @@ export interface SidebarGroup {
    */
   _fileKey?: string;
   overviewHeaders?: number[];
+  context?: string;
 }
 
 export type SidebarItem = {
@@ -196,6 +207,7 @@ export type SidebarItem = {
    */
   _fileKey?: string;
   overviewHeaders?: number[];
+  context?: string;
 };
 
 export type SidebarDivider = { dividerType: 'dashed' | 'solid' };
@@ -239,7 +251,7 @@ export interface DocFooter {
 
 export interface SocialLink {
   icon: SocialLinkIcon;
-  mode: 'link' | 'text' | 'img';
+  mode: 'link' | 'text' | 'img' | 'dom';
   content: string;
 }
 

@@ -1,7 +1,7 @@
-import path from 'path';
+import path from 'node:path';
 import fs from '@rspress/shared/fs-extra';
-import { logger } from '@rspress/shared/logger';
 import enhancedResolve from 'enhanced-resolve';
+import { logger } from '@rspress/shared/logger';
 import { PACKAGE_ROOT } from '../constants';
 
 const { CachedInputFileSystem, ResolverFactory } = enhancedResolve;
@@ -23,7 +23,7 @@ export async function detectReactVersion(): Promise<number> {
   return DEFAULT_REACT_VERSION;
 }
 
-export async function resolveReactAlias(reactVersion: number) {
+export async function resolveReactAlias(reactVersion: number, isSSR: boolean) {
   const basedir =
     reactVersion === DEFAULT_REACT_VERSION ? PACKAGE_ROOT : process.cwd();
   const libPaths = [
@@ -38,9 +38,10 @@ export async function resolveReactAlias(reactVersion: number) {
   }
   const alias: Record<string, string> = {};
   const resolver = ResolverFactory.createResolver({
-    fileSystem: new CachedInputFileSystem(fs),
+    fileSystem: new CachedInputFileSystem(fs as any, 0),
     extensions: ['.js'],
     alias,
+    conditionNames: isSSR ? ['...'] : ['browser', '...'],
   });
   await Promise.all(
     libPaths.map(async lib => {

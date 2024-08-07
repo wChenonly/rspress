@@ -1,5 +1,5 @@
 import { castArray, isArray, isUndefined, mergeWith } from 'lodash-es';
-import { UserConfig } from '@/types';
+import type { UserConfig } from '@/types';
 
 export const QUERY_REGEXP = /\?.*$/s;
 export const HASH_REGEXP = /#.*$/s;
@@ -12,24 +12,23 @@ export const DEFAULT_HIGHLIGHT_LANGUAGES = [
   ['js', 'javascript'],
   ['ts', 'typescript'],
   ['jsx', 'tsx'],
-  'tsx',
-  'json',
-  'css',
-  'scss',
-  'less',
   ['xml', 'xml-doc'],
-  'diff',
-  'yaml',
   ['md', 'markdown'],
   ['mdx', 'tsx'],
-  'bash',
 ];
 
+// TODO: these utils should be divided into node and runtime
 export const isSCM = () => Boolean(process.env.BUILD_VERSION);
 
 export const isProduction = () => process.env.NODE_ENV === 'production';
 
-export const isDebugMode = () => Boolean(process.env.DOC_DEBUG);
+export const isDebugMode = () => {
+  if (!process.env.DEBUG) {
+    return false;
+  }
+  const values = process.env.DEBUG?.toLocaleLowerCase().split(',') ?? [];
+  return ['rsbuild', 'builder', '*'].some(key => values.includes(key));
+};
 
 export const cleanUrl = (url: string): string =>
   url.replace(HASH_REGEXP, '').replace(QUERY_REGEXP, '');
@@ -124,10 +123,11 @@ export function replaceLang(
   },
   base = '',
   cleanUrls = false,
+  isPageNotFound = false,
 ) {
   let url = removeBase(rawUrl, base);
   // rspress.dev/builder + switch to en -> rspress.dev/builder/en/index.html
-  if (!url) {
+  if (!url || isPageNotFound) {
     url = cleanUrls ? '/index' : '/index.html';
   }
 
@@ -179,10 +179,11 @@ export function replaceVersion(
   },
   base = '',
   cleanUrls = false,
+  isPageNotFound = false,
 ) {
   let url = removeBase(rawUrl, base);
   // rspress.dev/builder + switch to en -> rspress.dev/builder/en/index.html
-  if (!url) {
+  if (!url || isPageNotFound) {
     url = cleanUrls ? '/index' : '/index.html';
   }
   let versionPart = '';
@@ -252,6 +253,10 @@ export function normalizeHref(url?: string, cleanUrls = false) {
 
   if (cleanUrls && cleanUrl.endsWith('/')) {
     cleanUrl += 'index';
+  }
+
+  if (cleanUrls && cleanUrl.endsWith('.html')) {
+    cleanUrl = cleanUrl.replace(/\.html$/, '');
   }
 
   return addLeadingSlash(hash ? `${cleanUrl}#${hash}` : cleanUrl);

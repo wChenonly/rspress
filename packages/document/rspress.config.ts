@@ -1,6 +1,7 @@
 import { defineConfig } from 'rspress/config';
 import { pluginOpenGraph } from 'rsbuild-plugin-open-graph';
 import { pluginGoogleAnalytics } from 'rsbuild-plugin-google-analytics';
+import { pluginFontOpenSans } from 'rspress-plugin-font-open-sans';
 
 export default defineConfig({
   root: 'docs',
@@ -16,7 +17,11 @@ export default defineConfig({
   markdown: {
     checkDeadLinks: true,
   },
+  plugins: [pluginFontOpenSans()],
   builderConfig: {
+    dev: {
+      lazyCompilation: true,
+    },
     plugins: [
       pluginGoogleAnalytics({ id: 'G-66B2Z6KG0J' }),
       pluginOpenGraph({
@@ -31,15 +36,9 @@ export default defineConfig({
         },
       }),
     ],
-    source: {
-      define: {
-        'process.env.DOCUMATE_BACKEND_URL': JSON.stringify(
-          process.env.DOCUMATE_BACKEND_URL,
-        ),
-      },
-    },
   },
   route: {
+    cleanUrls: true,
     exclude: ['**/fragments/**'],
   },
   themeConfig: {
@@ -73,6 +72,8 @@ export default defineConfig({
         nextPageText: '下一篇',
         outlineTitle: '目录',
         searchPlaceholderText: '搜索',
+        searchNoResultsText: '未搜索到相关结果',
+        searchSuggestedQueryText: '可更换不同的关键字后重试',
       },
       {
         lang: 'en',

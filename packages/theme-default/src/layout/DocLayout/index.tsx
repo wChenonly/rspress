@@ -8,7 +8,7 @@ import { useLocaleSiteData } from '../../logic';
 import { SideMenu } from '../../components/LocalSideBar';
 import { TabDataContext } from '../../logic/TabDataContext';
 import styles from './index.module.scss';
-import { UISwitchResult } from '../../logic/useUISwitch';
+import type { UISwitchResult } from '../../logic/useUISwitch';
 
 export interface DocLayoutProps {
   beforeSidebar?: React.ReactNode;
@@ -17,6 +17,8 @@ export interface DocLayoutProps {
   afterDocFooter?: React.ReactNode;
   beforeDoc?: React.ReactNode;
   afterDoc?: React.ReactNode;
+  beforeDocContent?: React.ReactNode;
+  afterDocContent?: React.ReactNode;
   beforeOutline?: React.ReactNode;
   afterOutline?: React.ReactNode;
   uiSwitch?: UISwitchResult;
@@ -28,6 +30,8 @@ export function DocLayout(props: DocLayoutProps) {
     afterDocFooter,
     beforeDoc,
     afterDoc,
+    beforeDocContent,
+    afterDocContent,
     beforeOutline,
     afterOutline,
     beforeSidebar,
@@ -63,6 +67,7 @@ export function DocLayout(props: DocLayoutProps) {
     >
       {beforeDoc}
       <SideMenu
+        outlineTitle={outlineTitle}
         beforeSidebar={beforeSidebar}
         afterSidebar={afterSidebar}
         uiSwitch={uiSwitch}
@@ -72,10 +77,18 @@ export function DocLayout(props: DocLayoutProps) {
       >
         <div className="w-full flex-1">
           {isOverviewPage ? (
-            <Overview content={docContent} />
+            <>
+              {beforeDocContent}
+              <Overview content={docContent} />
+              {afterDocContent}
+            </>
           ) : (
             <div>
-              <div className="rspress-doc">{docContent}</div>
+              <div className="rspress-doc">
+                {beforeDocContent}
+                {docContent}
+                {afterDocContent}
+              </div>
               <div className="rspress-doc-footer">
                 {beforeDocFooter}
                 {uiSwitch.showDocFooter && <DocFooter />}

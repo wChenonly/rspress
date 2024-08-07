@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import path from 'path';
+import path from 'node:path';
 import { getPort, killProcess, runDevCommand } from '../utils/runCommands';
 
 const fixtureDir = path.resolve(__dirname, '../fixtures');
@@ -44,21 +44,24 @@ test.describe('Auto nav and sidebar test', async () => {
     const h2 = await page.$$('.overview-index h2');
     const h2Texts = await Promise.all(h2.map(element => element.textContent()));
     expect(h2Texts.join(',')).toEqual(
-      ['Config', 'Client API', 'Others'].join(','),
+      ['Config', 'Client API', 'Commands', 'Single'].join(','),
     );
 
     const h3 = await page.$$('.overview-group_8f375 h3');
     const h3Texts = await Promise.all(h3.map(element => element.textContent()));
     expect(h3Texts.join(',')).toEqual(
       [
-        '基础配置',
-        '主题配置',
-        'Front Matter 配置',
-        '构建配置',
+        'Basic Config',
+        'Theme Config',
+        'Front Matter Config',
+        'Build Config',
+        'Extname Config',
+        'Nested',
         'Client API Overview',
         'Runtime API',
-        '内置组件',
-        '命令',
+        'Components',
+        'Commands',
+        'Single',
       ].join(','),
     );
 
@@ -71,11 +74,11 @@ test.describe('Auto nav and sidebar test', async () => {
         'nav',
         'sidebar',
         'builderConfig',
-        '默认配置',
+        'Default Config',
         'markdown',
         'markdown.remarkPlugins',
-        '用法',
-        '示例',
+        'Usage',
+        'Example',
         'rspress dev',
         'rspress build',
       ].join(','),
@@ -96,7 +99,14 @@ test.describe('Auto nav and sidebar test', async () => {
     const h3 = await page.$$('.overview-group_8f375 h3');
     const h3Texts = await Promise.all(h3.map(element => element.textContent()));
     expect(h3Texts.join(',')).toEqual(
-      ['基础配置', '主题配置', 'Front Matter 配置', '构建配置'].join(','),
+      [
+        'Basic Config',
+        'Theme Config',
+        'Front Matter Config',
+        'Build Config',
+        'Extname Config',
+        'Nested',
+      ].join(','),
     );
 
     const a = await page.$$('.overview-group_8f375 ul a');
@@ -108,7 +118,7 @@ test.describe('Auto nav and sidebar test', async () => {
         'nav',
         'sidebar',
         'builderConfig',
-        '默认配置',
+        'Default Config',
         'markdown',
         'markdown.remarkPlugins',
       ].join(','),
@@ -128,10 +138,68 @@ test.describe('Auto nav and sidebar test', async () => {
 
     const h3 = await page.$$('.overview-group_8f375 h3');
     const h3Texts = await Promise.all(h3.map(element => element.textContent()));
-    expect(h3Texts.join(',')).toEqual(['Runtime API', '内置组件'].join(','));
+    expect(h3Texts.join(',')).toEqual(['Runtime API', 'Components'].join(','));
 
     const a = await page.$$('.overview-group_8f375 ul a');
     const aTexts = await Promise.all(a.map(element => element.textContent()));
-    expect(aTexts.join(',')).toEqual(['用法', '示例'].join(','));
+    expect(aTexts.join(',')).toEqual(['Usage', 'Example'].join(','));
+  });
+
+  test('Sidebar not have same name md/mdx will not navigate', async ({
+    page,
+  }) => {
+    await page.goto(`http://localhost:${appPort}/guide/`, {
+      waitUntil: 'networkidle',
+    });
+    await page.click('.rspress-scrollbar nav section div');
+    expect(page.url()).toBe(`http://localhost:${appPort}/guide/`);
+  });
+
+  test('Should load nested subpage API Overview correctly', async ({
+    page,
+  }) => {
+    await page.goto(`http://localhost:${appPort}/api/config/nested.html`, {
+      waitUntil: 'networkidle',
+    });
+
+    const h2 = await page.$$('.overview-index h2');
+    const h2Texts = await Promise.all(h2.map(element => element.textContent()));
+    expect(h2Texts.join(',')).toEqual(['Nested'].join(','));
+
+    const h3 = await page.$$('.overview-group_8f375 h3');
+    const h3Texts = await Promise.all(h3.map(element => element.textContent()));
+    expect(h3Texts.join(',')).toEqual(['Nested Config'].join(','));
+
+    const a = await page.$$('.overview-group_8f375 ul a');
+    const aTexts = await Promise.all(a.map(element => element.textContent()));
+    expect(aTexts.join(',')).toEqual(['Nested H2'].join(','));
+  });
+
+  test('Should generate data-context in sidebargroup dom', async ({ page }) => {
+    await page.goto(`http://localhost:${appPort}/api/index.html`, {
+      waitUntil: 'networkidle',
+    });
+
+    const sidebarGroups = await page.$$('nav section');
+    const contexts1 = await page.evaluate(
+      sidebars =>
+        sidebars?.map(sidebar => sidebar.getAttribute('data-context')),
+      sidebarGroups,
+    );
+
+    expect(contexts1.join(',')).toEqual(
+      ['config', null, 'client-api'].join(','),
+    );
+
+    const sidebarGroupConfig = await page.$$('.rspress-sidebar-group > div');
+    const contexts2 = await page.evaluate(
+      sidebarGroupConfig =>
+        sidebarGroupConfig?.map(sidebarItem =>
+          sidebarItem.getAttribute('data-context'),
+        ),
+      sidebarGroupConfig,
+    );
+    expect(contexts2?.[2]).toEqual('front-matter');
+    expect(contexts2?.[3]).toEqual('config-build');
   });
 });

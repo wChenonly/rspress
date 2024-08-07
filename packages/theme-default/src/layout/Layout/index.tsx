@@ -1,22 +1,41 @@
 import 'nprogress/nprogress.css';
 import '../../styles';
-import React from 'react';
+import type React from 'react';
 import { Helmet } from 'react-helmet-async';
 import Theme, { Nav } from '@theme';
 import { usePageData, Content } from '@rspress/runtime';
-import { DocLayout, DocLayoutProps } from '../DocLayout';
-import { HomeLayoutProps } from '../HomeLayout';
+import { DocLayout, type DocLayoutProps } from '../DocLayout';
+import type { HomeLayoutProps } from '../HomeLayout';
 import type { NavProps } from '../../components/Nav';
 import { useLocaleSiteData } from '../../logic';
 import { useRedirect4FirstVisit } from '../../logic/useRedirect4FirstVisit';
-import { useUISwitch } from '../../logic/useUISwitch';
+import { type UISwitchResult, useUISwitch } from '../../logic/useUISwitch';
 
 export type LayoutProps = {
   top?: React.ReactNode;
   bottom?: React.ReactNode;
-} & DocLayoutProps &
+  /**
+   * Control whether or not to display the navbar, sidebar, outline and footer
+   */
+  uiSwitch?: Partial<UISwitchResult>;
+} & Omit<DocLayoutProps, 'uiSwitch'> &
   HomeLayoutProps &
   NavProps;
+
+const concatTitle = (title: string, suffix?: string) => {
+  if (!suffix) {
+    return title;
+  }
+
+  title = title.trim();
+  suffix = suffix.trim();
+
+  if (!suffix.startsWith('-') && !suffix.startsWith('|')) {
+    return `${title} - ${suffix}`;
+  }
+
+  return `${title} ${suffix}`;
+};
 
 export const Layout: React.FC<LayoutProps> = props => {
   const {
@@ -26,6 +45,8 @@ export const Layout: React.FC<LayoutProps> = props => {
     afterDocFooter,
     beforeDoc,
     afterDoc,
+    beforeDocContent,
+    afterDocContent,
     beforeSidebar,
     afterSidebar,
     beforeOutline,
@@ -42,6 +63,8 @@ export const Layout: React.FC<LayoutProps> = props => {
   const docProps: DocLayoutProps = {
     beforeDocFooter,
     afterDocFooter,
+    beforeDocContent,
+    afterDocContent,
     beforeDoc,
     afterDoc,
     beforeSidebar,
@@ -61,27 +84,42 @@ export const Layout: React.FC<LayoutProps> = props => {
     lang: currentLang,
     // Inject by remark-plugin-toc
     title: articleTitle,
-    frontmatter,
+    frontmatter = {},
   } = page;
   const localesData = useLocaleSiteData();
   useRedirect4FirstVisit();
+
   // Always show sidebar by default
   // Priority: front matter title > h1 title
-  let title = (frontmatter?.title as string) ?? articleTitle;
+  let title = (frontmatter.title as string) ?? articleTitle;
   const mainTitle = siteData.title || localesData.title;
 
   if (title && pageType === 'doc') {
     // append main title as a suffix
-    title = `${title} - ${mainTitle}`;
+    title = concatTitle(
+      title,
+      (frontmatter.titleSuffix as string) || mainTitle,
+    );
+  } else if (pageType === 'home') {
+    title = concatTitle(mainTitle, frontmatter.titleSuffix as string);
+  } else if (pageType === '404') {
+    title = concatTitle('404', mainTitle);
   } else {
     title = mainTitle;
   }
+
   const description =
     (frontmatter?.description as string) ||
     siteData.description ||
     localesData.description;
-  // Control whether to show navbar/sidebar/outline/footer
-  const uiSwitch = useUISwitch();
+
+  // Control whether or not to display the navbar, sidebar, outline and footer
+  // `props.uiSwitch` has higher priority and allows user to override the default value
+  const uiSwitch = {
+    ...useUISwitch(),
+    ...props.uiSwitch,
+  };
+
   // Use doc layout by default
   const getContentLayout = () => {
     switch (pageType) {

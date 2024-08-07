@@ -1,5 +1,5 @@
-import { createRequire } from 'module';
-import path from 'path';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 import { cac } from 'cac';
 import { build, dev, serve } from '@rspress/core';
 import { logger } from '@rspress/shared/logger';
@@ -100,9 +100,14 @@ cli
       await startDevServer();
 
       const exitProcess = async () => {
-        await cliWatcher.close();
-        await devServer.close();
+        try {
+          await devServer.close();
+          await cliWatcher.close();
+        } finally {
+          process.exit(0);
+        }
       };
+
       process.on('SIGINT', exitProcess);
       process.on('SIGTERM', exitProcess);
     },

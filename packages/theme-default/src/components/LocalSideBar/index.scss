@@ -14,6 +14,7 @@
   background-color: var(--rp-c-bg);
   padding-left: 10px;
   > button {
+    background-color: transparent;
     padding: 12px;
     transition: color 0.5s;
     &:hover {
@@ -37,9 +38,6 @@
 
 @media (min-width: 960px) {
   .rspress-sidebar-menu {
-    display: none;
-  }
-  .rspress-sidebar-back-drop {
     display: none;
   }
 }

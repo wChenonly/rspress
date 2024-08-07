@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import { expect, describe, test } from 'vitest';
 import { PluginDriver } from '../PluginDriver';
 import { normalizePath } from '../utils';
@@ -160,8 +160,9 @@ describe('RouteService', async () => {
   });
 
   test('Should generate routes code', () => {
-    expect(routeService.generateRoutesCodeByRouteMeta(routeMeta, false))
-      .toMatchInlineSnapshot(`
+    expect(
+      routeService.generateRoutesCodeByRouteMeta(routeMeta, false),
+    ).toMatchInlineSnapshot(`
         "
         import React from 'react';
         import { lazyWithPreload } from \\"react-lazy-with-preload\\";

@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import type { ComponentDoc, PropItem } from 'react-docgen-typescript';
 import { logger, chokidar, fs } from '@modern-js/utils';
 import {
@@ -80,10 +80,13 @@ export const docgen = async ({
               ...restOptions,
             };
             let fileParser = withDefaultConfig(parserOpts);
-            if (tsconfigPath) {
-              fileParser = withCustomConfig(tsconfigPath, parserOpts);
-            } else if (compilerOptions) {
-              fileParser = withCompilerOptions(compilerOptions, parserOpts);
+            if (tsconfigPath?.[key]) {
+              fileParser = withCustomConfig(tsconfigPath[key], parserOpts);
+            } else if (compilerOptions?.[key]) {
+              fileParser = withCompilerOptions(
+                compilerOptions[key],
+                parserOpts,
+              );
             }
             const componentDoc = fileParser.parse(moduleSourceFilePath);
             if (componentDoc.length === 0) {

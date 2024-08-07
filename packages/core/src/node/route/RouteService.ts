@@ -1,16 +1,17 @@
-import path from 'path';
+import path from 'node:path';
 import type { ComponentType } from 'react';
 import fs from '@rspress/shared/fs-extra';
 import {
   addLeadingSlash,
   addTrailingSlash,
-  PageModule,
-  UserConfig,
-  RouteMeta,
+  type PageModule,
+  type UserConfig,
+  type RouteMeta,
   withBase,
 } from '@rspress/shared';
 import { getPageKey, normalizePath } from '../utils';
-import { PluginDriver } from '../PluginDriver';
+import type { PluginDriver } from '../PluginDriver';
+import { PUBLIC_DIR } from '../constants';
 
 export const DEFAULT_PAGE_EXTENSIONS = ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'];
 
@@ -69,6 +70,7 @@ export const normalizeRoutePath = (
   )
     // remove the extension
     .replace(new RegExp(`\\.(${extensions.join('|')})$`), '')
+    .replace(/\.html$/, '')
     .replace(/\/index$/, '/');
 
   // restore the trail slash
@@ -144,8 +146,8 @@ export class RouteService {
       )
     ).default as typeof import('../../../compiled/globby');
     // 1. internal pages
-    const files = globby
-      .sync([`**/*.{${this.#extensions.join(',')}}`, ...this.#include], {
+    const files = (
+      await globby([`**/*.{${this.#extensions.join(',')}}`, ...this.#include], {
         cwd: this.#scanDir,
         absolute: true,
         ignore: [
@@ -153,9 +155,10 @@ export class RouteService {
           '**/node_modules/**',
           '**/.eslintrc.js',
           '**/.nx-cache/**',
+          `./${PUBLIC_DIR}/**`,
         ],
       })
-      .sort();
+    ).sort();
     files.forEach(filePath => {
       const fileRelativePath = normalizePath(
         path.relative(this.#scanDir, filePath),

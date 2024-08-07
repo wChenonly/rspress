@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import path from 'path';
+import path from 'node:path';
 import { getPort, killProcess, runDevCommand } from '../utils/runCommands';
 
 const fixtureDir = path.resolve(__dirname, '../fixtures');
@@ -29,5 +29,4 @@ test.describe('custom-id test', async () => {
     const text = await page.evaluate(h1 => h1?.textContent, h1);
     expect(text).toContain('Guide');
   });
-
 });

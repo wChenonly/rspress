@@ -1,15 +1,16 @@
-import languagesInfo from 'virtual-prism-languages';
+import { aliases, languages } from 'virtual-prism-languages';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { usePageData } from '@rspress/runtime';
+import type { CodeProps } from '.';
 import prisimThemeStyle from '../prisim-theme';
-import { CodeProps } from '.';
 
 let registered = false;
-
 function registerLanguages() {
-  Object.keys(languagesInfo).forEach(key => {
-    SyntaxHighlighter.registerLanguage(key, languagesInfo[key]);
+  Object.keys(languages).forEach(name => {
+    SyntaxHighlighter.registerLanguage(name, languages[name]);
   });
+
+  SyntaxHighlighter.alias(aliases);
   registered = true;
 }
 

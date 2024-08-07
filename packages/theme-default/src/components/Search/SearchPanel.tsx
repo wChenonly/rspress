@@ -1,8 +1,8 @@
 /* eslint-disable max-lines */
 import { usePageData } from '@rspress/runtime';
-import { SearchOptions, isProduction } from '@rspress/shared';
+import { type SearchOptions, isProduction } from '@rspress/shared';
 import { debounce, groupBy } from 'lodash-es';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as userSearchHooks from 'virtual-search-hooks';
 import CloseSvg from '@theme-assets/close';
@@ -19,6 +19,7 @@ import { PageSearcher } from './logic/search';
 import type {
   CustomMatchResult,
   DefaultMatchResult,
+  DefaultMatchResultItem,
   MatchResult,
   PageSearcherConfig,
 } from './logic/types';
@@ -38,11 +39,23 @@ export interface SearchPanelProps {
   setFocused: (focused: boolean) => void;
 }
 
+const useDebounce = <T extends (...args: any[]) => void>(cb: T): T => {
+  const cbRef = useRef(cb);
+  cbRef.current = cb;
+  const debounced = useCallback(
+    debounce((...args: any) => cbRef.current(...args), 150),
+    [],
+  );
+  return debounced as unknown as T;
+};
+
 export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
   const [query, setQuery] = useState('');
   const [searchResult, setSearchResult] = useState<MatchResult>([]);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [initing, setIniting] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [resultTabIndex, setResultTabIndex] = useState(0);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const pageSearcherRef = useRef<PageSearcher | null>(null);
   const pageSearcherConfigRef = useRef<PageSearcherConfig | null>(null);
@@ -83,19 +96,18 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
     siteData,
     page: { lang, version },
   } = usePageData();
-  const { sidebar } = useLocaleSiteData();
+  const { sidebar, searchPlaceholderText = 'Search Docs' } =
+    useLocaleSiteData();
   const { search, title: siteTitle } = siteData;
   const versionedSearch =
     search && search.mode !== 'remote' && search.versioned;
   const DEFAULT_RESULT = [
     { group: siteTitle, result: [], renderType: RenderType.Default },
   ];
-  const [currentSuggestions, setCurrentSuggestions] = useState<
-    DefaultMatchResult['result']
-  >([]);
-  const [currentRenderType, setCurrentRenderType] = useState<RenderType>(
-    RenderType.Default,
-  );
+  const currentSuggestions =
+    (searchResult[resultTabIndex]?.result as DefaultMatchResultItem[]) ?? [];
+  const currentRenderType =
+    searchResult[resultTabIndex]?.renderType ?? RenderType.Default;
 
   // We need to extract the group name by the link so that we can divide the search result into different groups.
   const extractGroupName = (link: string) =>
@@ -117,17 +129,21 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
     });
     pageSearcherRef.current = pageSearcher;
     pageSearcherConfigRef.current = pageSearcherConfig;
-    await Promise.all([
-      pageSearcherRef.current.init(),
-      new Promise(resolve => setTimeout(resolve, 1000)),
-    ]);
+    await pageSearcherRef.current.init();
     setIniting(false);
     const query = searchInputRef.current?.value;
     if (query) {
       const matched = await pageSearcherRef.current?.match(query);
       setSearchResult(matched || DEFAULT_RESULT);
+      setIsSearching(false);
     }
   }
+
+  const clearSearchState = () => {
+    setFocused(false);
+    setResultTabIndex(0);
+    setCurrentSuggestionIndex(0);
+  };
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -170,20 +186,24 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
             currentSuggestionIndex >= 0 &&
             currentRenderType === RenderType.Default
           ) {
-            const suggestion = currentSuggestions[currentSuggestionIndex];
-            const isCurrent = currentSuggestions === searchResult[0].result;
+            // the ResultItem has been normalized to display
+            const flatSuggestions = [].concat(
+              ...Object.values(normalizeSuggestions(currentSuggestions)),
+            );
+            const suggestion = flatSuggestions[currentSuggestionIndex];
+            const isCurrent = resultTabIndex === 0;
             if (isCurrent) {
               window.location.href = isProduction()
                 ? suggestion.link
                 : removeDomain(suggestion.link);
-              setFocused(false);
             } else {
               window.open(suggestion.link);
             }
+            clearSearchState();
           }
           break;
         case KEY_CODE.ESC:
-          setFocused(false);
+          clearSearchState();
           break;
         default:
           break;
@@ -196,6 +216,8 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
   }, [
     setCurrentSuggestionIndex,
     setFocused,
+    focused,
+    resultTabIndex,
     currentSuggestions,
     currentSuggestionIndex,
   ]);
@@ -225,11 +247,15 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
   const handleQueryChangedImpl = async (value: string) => {
     let newQuery = value;
     setQuery(newQuery);
+    if (search && search.mode === 'remote' && search.searchLoading) {
+      setIsSearching(true);
+    }
     if (newQuery) {
       const searchResult: MatchResult = [];
 
-      if (userSearchHooks.beforeSearch) {
-        const transformedQuery = await userSearchHooks.beforeSearch(newQuery);
+      if ('beforeSearch' in userSearchHooks) {
+        const key = 'beforeSearch' as const;
+        const transformedQuery = await userSearchHooks[key](newQuery);
         if (transformedQuery) {
           newQuery = transformedQuery;
         }
@@ -242,8 +268,9 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
         searchResult.push(...defaultSearchResult);
       }
 
-      if (userSearchHooks.onSearch) {
-        const customSearchResult = await userSearchHooks.onSearch(
+      if ('onSearch' in userSearchHooks) {
+        const key = 'onSearch' as const;
+        const customSearchResult = await userSearchHooks[key](
           newQuery,
           searchResult as DefaultMatchResult[],
         );
@@ -260,43 +287,39 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
         }
       }
 
-      setSearchResult(searchResult || DEFAULT_RESULT);
-
-      if (userSearchHooks.afterSearch) {
-        await userSearchHooks.afterSearch(newQuery, searchResult);
+      if ('afterSearch' in userSearchHooks) {
+        const key = 'afterSearch' as const;
+        await userSearchHooks[key](newQuery, searchResult);
       }
 
-      if (searchResult.length > 0) {
-        setCurrentSuggestions(
-          searchResult[0].result as DefaultMatchResult['result'],
-        );
+      // only setSearchResult when query is current query value
+      const currQuery = searchInputRef.current?.value;
+      if (currQuery === newQuery) {
+        setSearchResult(searchResult || DEFAULT_RESULT);
+        setIsSearching(false);
       }
     }
   };
-  const handleQueryChange = useMemo(
-    () => debounce(handleQueryChangedImpl, 150),
-    [],
-  );
+
+  const handleQueryChange = useDebounce(handleQueryChangedImpl);
 
   const normalizeSuggestions = (suggestions: DefaultMatchResult['result']) =>
     groupBy(suggestions, 'group');
 
-  // accumulateIndex is used to calculate the index of the suggestion in the whole list.
-  let accumulateIndex = -1;
-
   const renderSearchResult = (
     result: MatchResult,
     searchOptions: SearchOptions,
+    isSearching: boolean,
   ) => {
     if (result.length === 1) {
       const currentSearchResult = result[0]
         .result as DefaultMatchResult['result'];
-      if (currentSearchResult.length === 0) {
+      if (currentSearchResult.length === 0 && !isSearching) {
         return <NoSearchResult query={query} />;
       }
       return (
         <div ref={searchResultTabRef}>
-          {renderSearchResultItem(currentSearchResult)}
+          {renderSearchResultItem(currentSearchResult, query, isSearching)}
         </div>
       );
     }
@@ -311,16 +334,15 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
       return indexItem.label;
     });
 
+    const renderKey = 'render' as const;
+
     return (
       <Tabs
         values={tabValues}
         tabContainerClassName={styles.tabClassName}
         onChange={index => {
-          setCurrentSuggestions(
-            result[index].result as DefaultMatchResult['result'],
-          );
+          setResultTabIndex(index);
           setCurrentSuggestionIndex(0);
-          setCurrentRenderType(result[index].renderType);
         }}
         // @ts-ignore
         ref={searchResultTabRef}
@@ -328,9 +350,9 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
         {result.map(item => (
           <Tab key={item.group}>
             {item.renderType === RenderType.Default &&
-              renderSearchResultItem(item.result)}
+              renderSearchResultItem(item.result, query, isSearching)}
             {item.renderType === RenderType.Custom &&
-              userSearchHooks.render(item.result)}
+              userSearchHooks[renderKey](item.result)}
           </Tab>
         ))}
       </Tabs>
@@ -339,23 +361,24 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
 
   const renderSearchResultItem = (
     suggestionList: DefaultMatchResult['result'],
+    query: string,
+    isSearching: boolean,
   ) => {
-    // if no result, show no result
-    if (suggestionList.length === 0 && !initing) {
+    // if isSearching, show loading svg
+    if (isSearching) {
       return (
-        <div className="mt-4 flex-center">
-          <div
-            className="p-2 font-bold text-md"
-            style={{
-              color: '#2c3e50',
-            }}
-          >
-            No results found
-          </div>
+        <div className="flex flex-col items-center">
+          <SvgWrapper icon={LoadingSvg} className="m-8 opacity-80" />
         </div>
       );
     }
+    // if no result, show no result
+    if (suggestionList.length === 0 && !initing) {
+      return <NoSearchResult query={query} />;
+    }
     const normalizedSuggestions = normalizeSuggestions(suggestionList);
+    // accumulateIndex is used to calculate the index of the suggestion in the whole list.
+    let accumulateIndex = -1;
     return (
       <ul className={styles.suggestList}>
         {Object.keys(normalizedSuggestions).map(group => {
@@ -375,10 +398,10 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
                         setCanScroll(false);
                         setCurrentSuggestionIndex(suggestionIndex);
                       }}
-                      closeSearch={() => setFocused(false)}
-                      inCurrentDocIndex={
-                        currentSuggestions === searchResult[0].result
-                      }
+                      closeSearch={() => {
+                        clearSearchState();
+                      }}
+                      inCurrentDocIndex={resultTabIndex === 0}
                       scrollTo={scrollTo}
                     />
                   );
@@ -395,7 +418,12 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
     <>
       {focused &&
         createPortal(
-          <div className={styles.mask} onClick={() => setFocused(false)}>
+          <div
+            className={styles.mask}
+            onClick={() => {
+              clearSearchState();
+            }}
+          >
             <div
               className={`${styles.modal}`}
               onClick={e => {
@@ -411,7 +439,7 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
                   <input
                     className={styles.input}
                     ref={searchInputRef}
-                    placeholder="Search Docs"
+                    placeholder={searchPlaceholderText}
                     aria-label="Search"
                     autoComplete="off"
                     autoFocus
@@ -425,7 +453,7 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
                         if (searchInputRef.current) {
                           e.stopPropagation();
                           if (!query) {
-                            setFocused(false);
+                            clearSearchState();
                           } else {
                             searchInputRef.current.value = '';
                             setQuery('');
@@ -439,28 +467,21 @@ export function SearchPanel({ focused, setFocused }: SearchPanelProps) {
                   className="text-brand ml-2 sm:hidden cursor-pointer"
                   onClick={e => {
                     e.stopPropagation();
-                    setFocused(false);
+                    clearSearchState();
                   }}
                 >
                   Cancel
                 </h2>
               </div>
 
-              {query ? (
+              {query && !initing ? (
                 <div
                   className={`${styles.searchHits}  rspress-scrollbar`}
                   ref={searchResultRef}
                 >
-                  {renderSearchResult(searchResult, search)}
+                  {renderSearchResult(searchResult, search, isSearching)}
                 </div>
               ) : null}
-              {initing && (
-                <div className="flex-center">
-                  <div className="p-2 text-sm">
-                    <SvgWrapper icon={LoadingSvg} />
-                  </div>
-                </div>
-              )}
             </div>
           </div>,
           document.getElementById('search-container')!,

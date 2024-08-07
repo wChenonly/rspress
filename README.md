@@ -7,18 +7,10 @@
 A fast Rspack-based static site generator.
 
 <p>
-  <a href="https://discord.gg/mkVw5zPAtf">
-    <img src="https://img.shields.io/discord/977448667919286283?logo=discord&label=discord&colorA=564341&colorB=EDED91" alt="discord channel" />
-  </a>
-  <a href="https://npmjs.com/package/rspress?activeTab=readme">
-   <img src="https://img.shields.io/npm/v/rspress?style=flat-square&colorA=564341&colorB=EDED91" alt="npm version" />
-  </a>
-  <a href="https://npmcharts.com/compare/rspress?minimal=true">
-    <img src="https://img.shields.io/npm/dm/rspress.svg?style=flat-square&colorA=564341&colorB=EDED91" alt="downloads" />
-  </a>
-  <a href="https://github.com/web-infra-dev/rsbuild/blob/main/LICENSE">
-    <img src="https://img.shields.io/npm/l/rspress?style=flat-square&colorA=564341&colorB=EDED91" alt="license" />
-  </a>
+  <a href="https://discord.gg/mkVw5zPAtf"><img src="https://img.shields.io/badge/chat-discord-blue?logo=discord&colorA=564341&colorB=EDED91" alt="discord channel" /></a>
+  <a href="https://npmjs.com/package/rspress?activeTab=readme"><img src="https://img.shields.io/npm/v/rspress?style=flat-square&colorA=564341&colorB=EDED91" alt="npm version" /></a>
+  <a href="https://npmcharts.com/compare/rspress?minimal=true"><img src="https://img.shields.io/npm/dm/rspress.svg?style=flat-square&colorA=564341&colorB=EDED91" alt="downloads" /></a>
+  <a href="https://github.com/web-infra-dev/rsbuild/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/rspress?style=flat-square&colorA=564341&colorB=EDED91" alt="license" /></a>
 </p>
 
 ## 🔥 Features
@@ -98,6 +90,7 @@ This repo has adopted the ByteDance Open Source Code of Conduct. Please check [C
 | [@rspress/mdx-rs](https://github.com/web-infra-dev/mdx-rs) | Rust MDX compiler for Rspress.                    |
 | [Rspack](https://github.com/web-infra-dev/rspack)          | A fast Rust-based web bundler.                    |
 | [Rsbuild](https://github.com/web-infra-dev/rsbuild)        | An Rspack-based build tool for the web.           |
+| [Rslib](https://github.com/web-infra-dev/rslib)            | A library build tool powered by Rsbuild.          |
 | [Rsdoctor](https://github.com/web-infra-dev/rsdoctor)      | A one-stop build analyzer for Rspack and Webpack. |
 
 ## 🌟 Quality

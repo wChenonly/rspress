@@ -28,7 +28,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 25
 
@@ -51,7 +51,7 @@ jobs:
 
       - name: Nx Cache
         id: nx-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .nx-cache
           key: nx-${{ github.ref_name }}-${{ runner.os }}-${{ github.sha }}
@@ -75,7 +75,7 @@ jobs:
         run: npx playwright install --with-deps && pnpm run test:e2e
 
       - name: Upload Playwright Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report

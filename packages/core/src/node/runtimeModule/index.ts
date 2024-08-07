@@ -1,15 +1,14 @@
 import type { UserConfig } from '@rspress/shared';
 import { RspackVirtualModulePlugin } from 'rspack-plugin-virtual-module';
-import { RsbuildPlugin } from '@rsbuild/core';
-import { RouteService } from '../route/RouteService';
-import { PluginDriver } from '../PluginDriver';
+import type { RsbuildPlugin } from '@rsbuild/core';
+import type { RouteService } from '../route/RouteService';
+import type { PluginDriver } from '../PluginDriver';
 import { routeVMPlugin } from './routeData';
 import { siteDataVMPlugin } from './siteData/index';
 import { i18nVMPlugin } from './i18n';
 import { globalUIComponentsVMPlugin } from './globalUIComponents';
 import { globalStylesVMPlugin } from './globalStyles';
 import { searchHookVMPlugin } from './searchHooks';
-import { prismLanguageVMPlugin } from './prismLanguages';
 
 export interface FactoryContext {
   userDocRoot: string;
@@ -32,6 +31,7 @@ export const runtimeModuleFactory: RuntimeModuleFactory[] = [
   routeVMPlugin,
   /**
    * Generate search index and site data for client runtime
+   * Also responsible for automatically importing prism languages
    */
   siteDataVMPlugin,
   /**
@@ -50,21 +50,18 @@ export const runtimeModuleFactory: RuntimeModuleFactory[] = [
    * Generate search hook module
    */
   searchHookVMPlugin,
-  /**
-   * Generate prism languages module
-   */
-  prismLanguageVMPlugin,
 ];
 
 // We will use this plugin to generate runtime module in browser, which is important to ensure the client have access to some compile-time data
 export function rsbuildPluginDocVM(
-  factoryContext: Omit<FactoryContext, 'alias'>,
+  factoryContext: Omit<FactoryContext, 'alias' | 'isSSR'>,
 ): RsbuildPlugin {
   const { pluginDriver } = factoryContext;
   return {
     name: 'rsbuild-plugin-doc-vm',
     setup(api) {
-      api.modifyBundlerChain(async bundlerChain => {
+      api.modifyBundlerChain(async (bundlerChain, { target }) => {
+        const isServer = target === 'node';
         // The order should be sync
         const alias = bundlerChain.resolve.alias.entries();
         const runtimeModule: Record<string, string> = {};
@@ -72,6 +69,7 @@ export function rsbuildPluginDocVM(
         for (const factory of runtimeModuleFactory) {
           const moduleResult = await factory({
             ...factoryContext,
+            isSSR: isServer,
             alias: alias as Record<string, string>,
           });
           Object.assign(runtimeModule, moduleResult);
@@ -86,13 +84,14 @@ export function rsbuildPluginDocVM(
           }
           runtimeModule[key] = modulesByPlugin[key];
         });
-        bundlerChain.plugin('rspress-runtime-module').use(
-          // @ts-expect-error
-          new RspackVirtualModulePlugin(
-            runtimeModule,
-            factoryContext.runtimeTempDir,
-          ),
-        );
+        bundlerChain
+          .plugin('rspress-runtime-module')
+          .use(
+            new RspackVirtualModulePlugin(
+              runtimeModule,
+              factoryContext.runtimeTempDir,
+            ),
+          );
       });
     },
   };
@@ -119,5 +118,4 @@ export const runtimeModuleIDs = [
   RuntimeModuleID.SearchIndexHash,
   RuntimeModuleID.I18nText,
   RuntimeModuleID.SearchHooks,
-  RuntimeModuleID.PrismLanguages,
 ];

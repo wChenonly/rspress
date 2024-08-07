@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import type { RspressPlugin } from '@rspress/shared';
 import fs from '@modern-js/utils/fs-extra';
 import type {
@@ -43,7 +43,8 @@ export function pluginApiDocgen(options?: PluginOptions): RspressPlugin {
     },
     async modifySearchIndexData(pages) {
       // Update the search index of module doc which includes `<API moduleName="foo" />` and `<API moduleName="foo" ></API>
-      const apiCompRegExp = /(<API\s+moduleName=['"](\S+)['"]\s*(.*)?\/>)|(<API\s+moduleName=['"](\S+)['"]\s*(.*)?>(.*)?<\/API>)/;
+      const apiCompRegExp =
+        /(<API\s+moduleName=['"](\S+)['"]\s*(.*)?\/>)|(<API\s+moduleName=['"](\S+)['"]\s*(.*)?>(.*)?<\/API>)/;
       await Promise.all(
         pages.map(async page => {
           const { _filepath, lang } = page;

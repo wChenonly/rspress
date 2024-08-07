@@ -6,7 +6,7 @@
 
 用于自定义 Rsbuild 的配置项，完整配置项请查看 [Rsbuild - 配置](https://rsbuild.dev/zh/config/)。
 
-比如，将产物目录修改为 `doc_dist`：
+- 示例：使用 [output.distPath](https://rsbuild.dev/config/output/dist-path) 将输出目录修改为 `doc_dist`：
 
 ```ts title="rspress.config.ts"
 export default defineConfig({
@@ -14,6 +14,36 @@ export default defineConfig({
     output: {
       distPath: {
         root: 'doc_dist',
+      },
+    },
+  },
+});
+```
+
+- 示例：使用 [tools.rspack](https://rsbuild.dev/config/tools/rspack) 修改 Rspack 配置，比如注册一个 webpack 或 Rspack 插件。比如：
+
+```ts title="rspress.config.ts"
+export default defineConfig({
+  builderConfig: {
+    tools: {
+      rspack: async config => {
+        const { default: ESLintPlugin } = await import('eslint-webpack-plugin');
+        config.plugins?.push(new ESLintPlugin());
+        return config;
+      },
+    },
+  },
+});
+```
+
+- 示例：使用 [source.alias](https://rsbuild.dev/config/source/alias) 配置路径别名：
+
+```ts title="rspress.config.ts"
+export default defineConfig({
+  builderConfig: {
+    source: {
+      alias: {
+        '@common': './src/common',
       },
     },
   },
@@ -67,6 +97,27 @@ export default defineConfig({
       title: 'My Website',
       type: 'website',
       // ...options
+    }),
+  ],
+});
+```
+
+你也可以覆盖内置的 [@rsbuild/plugin-react](https://rsbuild.dev/zh/plugins/list/plugin-react)、[@rsbuild/plugin-sass](https://rsbuild.dev/zh/plugins/list/plugin-sass) 和 [@rsbuild/plugin-less](https://rsbuild.dev/zh/plugins/list/plugin-less) 插件，并传入相关插件选项。
+
+- 示例：修改内置的 [@rsbuild/plugin-less](https://rsbuild.dev/zh/plugins/list/plugin-less) 插件的相关选项
+
+```ts title="rspress.config.ts"
+import { defineConfig } from 'rspress/config';
+import { pluginLess } from '@rsbuild/plugin-less';
+
+export default defineConfig({
+  builderPlugins: [
+    pluginLess({
+      lessLoaderOptions: {
+        lessOptions: {
+          math: 'always',
+        },
+      },
     }),
   ],
 });
@@ -206,9 +257,26 @@ export default defineConfig({
 
 ### markdown.highlightLanguages
 
-- Type: `(string | [string, string])[]`
+- Type: `[string, string][]`
+- Default:
 
-注册需要高亮的语言。默认支持的语言包括`js`、`jsx`、`ts`、`tsx`、`json`、`css`、`scss`、`less`、`xml`、`diff`、`yaml`、`md`、`mdx`、`bash`，你可以在这些语言的基础上进行扩展。比如：
+```js
+const DEFAULT_HIGHLIGHT_LANGUAGES = [
+  ['js', 'javascript'],
+  ['ts', 'typescript'],
+  ['jsx', 'tsx'],
+  ['xml', 'xml-doc'],
+  ['md', 'markdown'],
+  ['mdx', 'tsx'],
+];
+```
+
+Rspress 支持自动导入高亮的语言，并默认做了一些语言别名。
+
+- 默认基于 [Prism.js](https://prismjs.com/) 实现，你也可以通过 [@rspress/plugin-shiki](/plugin/official-plugins/shiki) 切换到 Shiki。
+- 默认配置别名的语言包括 `js`、`jsx`、`ts`、`tsx`、`xml`、`md`、`mdx`。
+
+你也可以在这些默认别名的基础上进行扩展，比如：
 
 ```ts title="rspress.config.ts"
 import { defineConfig } from 'rspress/config';
@@ -217,8 +285,6 @@ import path from 'path';
 export default defineConfig({
   markdown: {
     highlightLanguages: [
-      'ejs',
-      'go',
       // 别名为 md, 全名为 markdown
       ['md', 'markdown'],
     ],
@@ -226,4 +292,4 @@ export default defineConfig({
 });
 ```
 
-每项语言的配置支持 `string` 和 `[string, string]` 两种格式，在数组的格式下，前者为语言的别名，后者为语言的全名，你可以前往[文件列表](https://github.com/react-syntax-highlighter/react-syntax-highlighter/tree/master/src/languages/prism)查看所有支持的语言全名。
+每项语言的别名以 `[string, string]` 格式配置，前者为语言的别名，后者为语言的全名，你可以前往[文件列表](https://github.com/react-syntax-highlighter/react-syntax-highlighter/tree/master/src/languages/prism)查看所有支持的语言全名。

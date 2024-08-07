@@ -1,21 +1,21 @@
 import {
-  UserConfig,
-  DefaultThemeConfig,
-  NormalizedDefaultThemeConfig,
-  SidebarItem,
-  SidebarGroup,
-  NormalizedSidebarGroup,
-  PageIndexInfo,
-  NavItemWithLink,
+  type UserConfig,
+  type DefaultThemeConfig,
+  type NormalizedDefaultThemeConfig,
+  type SidebarItem,
+  type SidebarGroup,
+  type NormalizedSidebarGroup,
+  type PageIndexInfo,
+  type NavItemWithLink,
   withBase,
   addLeadingSlash,
   isExternalUrl,
   withoutBase,
-  NavItem,
-  Sidebar,
-  SidebarDivider,
+  type NavItem,
+  type Sidebar,
+  type SidebarDivider,
   slash,
-  SidebarSectionHeader,
+  type SidebarSectionHeader,
 } from '@rspress/shared';
 import { applyReplaceRules } from '../../utils/applyReplaceRules';
 import { getI18nData } from '../i18n';
@@ -71,8 +71,17 @@ export function normalizeThemeConfig(
       return {};
     }
     const normalizeSidebarItem = (
-      item: SidebarGroup | SidebarItem | SidebarDivider | SidebarSectionHeader | string,
-    ): NormalizedSidebarGroup | SidebarItem | SidebarDivider | SidebarSectionHeader => {
+      item:
+        | SidebarGroup
+        | SidebarItem
+        | SidebarDivider
+        | SidebarSectionHeader
+        | string,
+    ):
+      | NormalizedSidebarGroup
+      | SidebarItem
+      | SidebarDivider
+      | SidebarSectionHeader => {
       // Meet the divider, return directly
       if (typeof item === 'object' && 'dividerType' in item) {
         return item;
@@ -99,11 +108,12 @@ export function normalizeThemeConfig(
           collapsible: item.collapsible ?? true,
           tag: item.tag,
           items: item.items.map(subItem => {
-            return normalizeSidebarItem(subItem) as NormalizedSidebarGroup | SidebarItem;
+            return normalizeSidebarItem(subItem) as
+              | NormalizedSidebarGroup
+              | SidebarItem;
           }),
         };
       }
-
 
       if (typeof item === 'string') {
         const normalizedItem = normalizeLinkPrefix(item, currentLang);
@@ -131,7 +141,10 @@ export function normalizeThemeConfig(
     const normalizeSidebar = (sidebar: Sidebar) => {
       Object.keys(sidebar).forEach(key => {
         const value = sidebar[key];
-        normalizedSidebar[key] = value.map(normalizeSidebarItem) as (NormalizedSidebarGroup | SidebarItem)[];
+        normalizedSidebar[key] = value.map(normalizeSidebarItem) as (
+          | NormalizedSidebarGroup
+          | SidebarItem
+        )[];
       });
     };
 

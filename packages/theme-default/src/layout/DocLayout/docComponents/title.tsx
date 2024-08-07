@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import styles from './index.module.scss';
 
 export const H1 = (props: React.ComponentProps<'h1'>) => {
@@ -14,7 +14,7 @@ export const H2 = (props: React.ComponentProps<'h2'>) => {
   return (
     <h2
       {...props}
-      className={`mt-14 mb-6 text-2xl tracking-tight ${styles.title}`}
+      className={`mt-12 mb-6 pt-8 text-2xl tracking-tight border-t-[1px] border-divider-light ${styles.title}`}
     />
   );
 };
@@ -26,9 +26,7 @@ export const H3 = (props: React.ComponentProps<'h3'>) => {
 };
 
 export const H4 = (props: React.ComponentProps<'h4'>) => {
-  return (
-    <h4 {...props} className={`mt-8 leading-6 text-base ${styles.title}`} />
-  );
+  return <h4 {...props} className={`mt-8 leading-6 text-lg ${styles.title}`} />;
 };
 
 export const H5 = (props: React.ComponentProps<'h5'>) => {

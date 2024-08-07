@@ -1,4 +1,4 @@
-import { NormalizedLocales } from '@rspress/shared';
+import type { NormalizedLocales } from '@rspress/shared';
 import { usePageData } from '@rspress/runtime';
 
 export function useLocaleSiteData(): NormalizedLocales {
@@ -17,6 +17,8 @@ export function useLocaleSiteData(): NormalizedLocales {
       nextPageText: themeConfig.nextPageText,
       sourceCodeText: themeConfig.sourceCodeText,
       searchPlaceholderText: themeConfig.searchPlaceholderText,
+      searchNoResultsText: themeConfig.searchNoResultsText,
+      searchSuggestedQueryText: themeConfig.searchSuggestedQueryText,
     } as NormalizedLocales;
   }
   const localeInfo = locales.find(locale => locale.lang === lang)!;

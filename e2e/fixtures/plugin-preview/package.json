@@ -11,13 +11,13 @@
     "@rspress/plugin-playground": "workspace:*",
     "@rspress/plugin-preview": "workspace:*",
     "@rspress/shared": "workspace:*",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-transition-group": "4.4.5",
     "rspress": "workspace:*",
     "solid-js": "^1.8.12"
   },
   "devDependencies": {
-    "@types/node": "^14"
+    "@types/node": "^18.11.17"
   }
 }

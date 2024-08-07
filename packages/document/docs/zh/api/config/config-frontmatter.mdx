@@ -43,6 +43,64 @@ import PageType from '@zh/fragments/page-type';
 
 <PageType />
 
+## titleSuffix
+
+- Type: `string`
+
+设置页面标题的后缀。未设置 `titleSuffix` 时，默认使用站点的 [title](/api/config/config-basic#title) 作为后缀。
+
+```yaml
+---
+titleSuffix: '基于 Rspack 的静态站点生成器'
+---
+```
+
+标题与后缀之间默认使用 `-` 作为分隔符，你也可以使用 `|` 进行分隔：
+
+```yaml
+---
+titleSuffix: '| 基于 Rspack 的静态站点生成器'
+---
+```
+
+## head
+
+- Type: `[string, Record<string, string>][]`
+
+设置为当前页面注入的额外 head 标签，它们将附加在 Rspress 全局注入的 head 标签之后。
+
+例如，你可以使用这些 headers 为 [Open Graph](https://ogp.me/) 指定自定义元标签。
+
+```yaml
+---
+head:
+  - - meta
+    - property: og:title
+      content: The Rock
+  - - meta
+    - property: og:url
+      content: https://www.imdb.com/title/tt0117500/
+  - - meta
+    - property: og:image
+      content: https://ia.media-imdb.com/images/rock.jpg
+# - - [htmlTag]
+#   - [attributeName]: [attributeValue]
+#     [attributeName]: [attributeValue]
+---
+```
+
+::: tip Note
+
+确保正确定义 head 的标签（tag）名称及其属性（attribute）名称。
+
+对于包含连字符（`-`）的标签和属性名称，请使用驼峰式大小写格式。
+
+例如，`http-equiv="refresh"` 应定义为 `httpEquiv: refresh`。
+
+这是因为 headers 在底层由 React 和 react-helmet-async 处理。
+
+:::
+
 ## hero
 
 - Type: `Object`
@@ -50,12 +108,12 @@ import PageType from '@zh/fragments/page-type';
 `home` 页面的 hero 配置。它有以下类型：
 
 ```ts
-export interface Hero {
+interface Hero {
   name: string;
   text: string;
   tagline: string;
   image?: {
-    src: string;
+    src: string | { dark: string; light: string };
     alt: string;
     /**
      * `srcset` 和 `sizes` 同 `<img>` 的同名属性，取值请参考 https://mdn.io/srcset。
@@ -92,6 +150,19 @@ hero:
 ---
 ```
 
+在设置 `hero.text` 时，你可以使用 YAML 的 `|` 符号来手动控制换行：
+
+```yaml
+---
+pageType: home
+
+hero:
+  name: Rspress
+  text: |
+    文档工程
+    解决方案
+```
+
 或者你也可以用 `HTML` 来指定页面的 hero config：
 
 ```yaml
@@ -120,7 +191,7 @@ hero:
 `home` 页面的功能配置。它有以下类型：
 
 ```ts
-export interface Feature {
+interface Feature {
   title: string;
   details: string;
   icon: string;
@@ -211,4 +282,31 @@ overviewHeaders: []
 ---
 overviewHeaders: [2, 3]
 ---
+```
+
+## context
+
+- Type: `string`
+
+配置后，在生成侧边栏时会在所在的 DOM 节点添加 `data-context` 属性，值为配置的值。
+
+```yaml title="foo.mdx"
+---
+context: 'context-foo'
+---
+```
+
+```yaml title="bar.mdx"
+---
+context: 'context-bar'
+---
+```
+
+最终生成的侧边栏的 DOM 结构缩略如下：
+
+```html
+<div class="rspress-sidebar-group">
+  <div data-context="context-foo"></div>
+  <div data-context="context-bar"></div>
+</div>
 ```

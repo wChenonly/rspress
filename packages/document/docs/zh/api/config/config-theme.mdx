@@ -187,6 +187,8 @@ export interface Footer {
 }
 ```
 
+`message` 是一个可以包含 HTML 内容的字符串。这个字符串将使用 `dangerouslySetInnerHTML` 插入到页脚中，因此你可以传入 HTML 模板标签来设计你的页脚。
+
 比如：
 
 ```ts title="rspress.config.ts"
@@ -195,7 +197,8 @@ import { defineConfig } from 'rspress/config';
 export default defineConfig({
   themeConfig: {
     footer: {
-      message: 'This is a footer',
+      message:
+        '<p>这是一个包含<a href="https://example.com">链接</a>的<strong>页脚</strong></p>',
     },
   },
 });
@@ -292,13 +295,47 @@ export default defineConfig({
 });
 ```
 
+## searchNoResultsText
+
+- Type: `string`
+- Default: `No results for`
+
+没有搜索结果时的显示文本。比如:
+
+```ts title="rspress.config.ts"
+import { defineConfig } from 'rspress/config';
+
+export default defineConfig({
+  themeConfig: {
+    searchNoResultsText: 'No results for',
+  },
+});
+```
+
+## searchSuggestedQueryText
+
+- Type: `string`
+- Default: `Please try again with a different keyword`
+
+没有搜索结果时的建议查询提示文本。比如:
+
+```ts title="rspress.config.ts"
+import { defineConfig } from 'rspress/config';
+
+export default defineConfig({
+  themeConfig: {
+    searchSuggestedQueryText: 'Please search again',
+  },
+});
+```
+
 ## socialLinks
 
 - Type: `Array`
 - Default: `[]`
 
 你可以通过如下的配置添加相关链接，比如 `github` 链接、`twitter` 链接等。
-相关链接支持三种模式：`链接模式link` `文本模式text` `图片模式img`，相关例子如下：
+相关链接支持四种模式：`链接模式link` `文本模式text` `图片模式img` `自定义模式dom`，相关例子如下：
 
 ```ts title="rspress.config.ts"
 import { defineConfig } from 'rspress/config';
@@ -321,6 +358,12 @@ export default defineConfig({
         mode: 'img',
         content: '/qrcode.png',
       },
+      {
+        icon: 'github',
+        mode: 'dom',
+        content:
+          '<img src="https://lf3-static.bytednsdoc.com/obj/eden-cn/rjhwzy/ljhwZthlaukjlkulzlp/rspress/rspress-navbar-logo-0904.png" alt="logo" id="logo" class="mr-4 rspress-logo dark:hidden">',
+      },
     ],
   },
 });
@@ -329,6 +372,7 @@ export default defineConfig({
 - 当`link`模式时，点击 icon 即可跳转链接。
 - 当`text`模式时，鼠标移到 icon 上会显示弹框，弹框内容是输入的文本。
 - 当`img`模式时，鼠标移到 icon 上会显示弹框，弹框内容是指定的图片，需要注意的是，图片需要放在`public`目录下。
+- 当`dom`模式时，可以直接在 content 字段中传入需要自定义html。使用''进行包裹。
 
 相关链接支持以下几种图片，通过 icon 属性来选择：
 
@@ -428,6 +472,10 @@ export interface LocaleConfig {
   nextPageText?: string;
   // 搜索框占位符文本
   searchPlaceholderText?: string;
+  // 没有搜索结果时的显示文本
+  searchNoResultsText?: string;
+  // 没有搜索结果时的建议查询提示文本
+  searchSuggestedQueryText?: string;
 }
 ```
 

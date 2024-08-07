@@ -1,6 +1,6 @@
-import path from 'path';
+import path from 'node:path';
 import fs from '@rspress/shared/fs-extra';
-import { NavItem, Sidebar } from '@rspress/shared';
+import type { NavItem, Sidebar } from '@rspress/shared';
 import { logger } from '@rspress/shared/logger';
 import { loadFrontMatter } from '@rspress/shared/node-utils';
 
@@ -8,22 +8,33 @@ export async function detectFilePath(rawPath: string) {
   const extensions = ['.mdx', '.md', '.tsx', '.jsx', '.ts', '.js'];
   // The params doesn't have extension name, so we need to try to find the file with the extension name.
   let realPath: string | undefined = rawPath;
-  const filename = path.basename(rawPath);
-  if (filename.indexOf('.') === -1) {
+  const fileExtname = path.extname(rawPath);
+
+  // pathname may contain .json, see issue: https://github.com/web-infra-dev/rspress/issues/951
+  if (!extensions.includes(fileExtname)) {
     const pathWithExtension = extensions.map(ext => `${rawPath}${ext}`);
     const pathExistInfo = await Promise.all(
       pathWithExtension.map(p => fs.pathExists(p)),
     );
-    realPath = pathWithExtension.find((_, i) => pathExistInfo[i]);
+    const findPath = pathWithExtension.find((_, i) => pathExistInfo[i]);
+    // file may be public resource, see issue: https://github.com/web-infra-dev/rspress/issues/1052
+    if (!fileExtname || findPath) {
+      realPath = findPath;
+    }
   }
 
   return realPath;
 }
 
-export async function extractTitleAndOverviewHeaders(
+export async function extractInfoFromFrontmatter(
   filePath: string,
   rootDir: string,
-): Promise<{ title: string; overviewHeaders: string | undefined }> {
+): Promise<{
+  realPath: string | undefined;
+  title: string;
+  overviewHeaders: string | undefined;
+  context: string | undefined;
+}> {
   const realPath = await detectFilePath(filePath);
   if (!realPath) {
     logger.warn(
@@ -33,8 +44,10 @@ export async function extractTitleAndOverviewHeaders(
       )}".`,
     );
     return {
+      realPath,
       title: '',
       overviewHeaders: undefined,
+      context: undefined,
     };
   }
   const content = await fs.readFile(realPath, 'utf-8');
@@ -43,8 +56,10 @@ export async function extractTitleAndOverviewHeaders(
   const match = content.match(h1RegExp);
   const { frontmatter } = loadFrontMatter(content, filePath, rootDir);
   return {
+    realPath,
     title: frontmatter.title || match?.[1] || fileNameWithoutExt,
     overviewHeaders: frontmatter.overviewHeaders,
+    context: frontmatter.context,
   };
 }
 

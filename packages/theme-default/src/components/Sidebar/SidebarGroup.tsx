@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { NormalizedSidebarGroup, SidebarItem } from '@rspress/shared';
+import type React from 'react';
+import { useEffect, useRef } from 'react';
+import { type NormalizedSidebarGroup, SidebarItem } from '@rspress/shared';
 import {
   useNavigate,
   normalizeHrefInRuntime as normalizeHref,
@@ -103,6 +104,7 @@ export function SidebarGroup(props: SidebarItemProps) {
     <section
       key={id}
       className="mt-0.5 block"
+      data-context={item.context}
       style={{
         marginLeft: depth === 0 ? 0 : '18px',
       }}
@@ -115,10 +117,8 @@ export function SidebarGroup(props: SidebarItemProps) {
         onClick={e => {
           if (item.link) {
             navigate(withBase(normalizeHref(item.link)));
-            collapsed && toggleCollapse(e);
-          } else {
-            collapsible && toggleCollapse(e);
           }
+          collapsible && toggleCollapse(e);
         }}
         style={{
           borderRadius:
@@ -133,7 +133,14 @@ export function SidebarGroup(props: SidebarItemProps) {
           }}
         >
           <Tag tag={item.tag} />
-          <span className="flex-center">{renderInlineMarkdown(item.text)}</span>
+          <span
+            className="flex-center"
+            style={{
+              fontSize: depth === 0 ? '14px' : '13px',
+            }}
+          >
+            {renderInlineMarkdown(item.text)}
+          </span>
         </h2>
         {collapsible && (
           <div
@@ -170,7 +177,7 @@ export function SidebarGroup(props: SidebarItemProps) {
               />
             ) : (
               // eslint-disable-next-line react/no-array-index-key
-              <div key={index}>
+              <div key={index} data-context={item.context}>
                 <SidebarItemComp
                   {...props}
                   item={item}

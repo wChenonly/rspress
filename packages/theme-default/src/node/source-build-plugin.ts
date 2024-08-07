@@ -1,7 +1,7 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
-import { RspressPlugin } from '@rspress/shared';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import type { RspressPlugin } from '@rspress/shared';
 import { tailwindConfig } from '../../tailwind.config';
 
 const require = createRequire(import.meta.url);
@@ -21,16 +21,20 @@ export function SourceBuildPlugin(): RspressPlugin {
       },
       tools: {
         postcss: (_, { addPlugins }) => {
-          addPlugins(
-            require('tailwindcss')({
-              config: {
-                ...tailwindConfig,
-                content: tailwindConfig.content.map(item =>
-                  path.resolve(ROOT_DIR, item),
-                ),
-              },
-            }),
-          );
+          try {
+            addPlugins(
+              require('tailwindcss')({
+                config: {
+                  ...tailwindConfig,
+                  content: tailwindConfig.content.map(item =>
+                    path.resolve(ROOT_DIR, item),
+                  ),
+                },
+              }),
+            );
+          } catch (e) {
+            // if require tailwindcss failed, skip
+          }
         },
       },
     },

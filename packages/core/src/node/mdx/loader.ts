@@ -1,24 +1,26 @@
-import path from 'path';
-import { pathToFileURL } from 'url';
-import type { Rspack } from '@rsbuild/core';
+import path from 'node:path';
+import fs from '@rspress/shared/fs-extra';
+import { pathToFileURL } from 'node:url';
 import { createProcessor } from '@mdx-js/mdx';
-import { isProduction, type Header, type UserConfig } from '@rspress/shared';
+import { isProduction } from '@rspress/shared';
 import { logger } from '@rspress/shared/logger';
 import { loadFrontMatter } from '@rspress/shared/node-utils';
-import fs from 'fs-extra';
-import type { RouteService } from '../route/RouteService';
+import { createMDXOptions } from './options';
+import type { TocItem } from './remarkPlugins/toc';
+import { checkLinks } from './remarkPlugins/checkDeadLink';
+import { TEMP_DIR } from '../constants';
+import type { PluginDriver } from '../PluginDriver';
+import { RuntimeModuleID } from '../runtimeModule';
 import {
   normalizePath,
   escapeMarkdownHeadingIds,
   flattenMdxContent,
   applyReplaceRules,
 } from '../utils';
-import { PluginDriver } from '../PluginDriver';
-import { TEMP_DIR } from '../constants';
-import { RuntimeModuleID } from '../runtimeModule';
-import { createMDXOptions } from './options';
-import { TocItem } from './remarkPlugins/toc';
-import { checkLinks } from './remarkPlugins/checkDeadLink';
+
+import type { Rspack } from '@rsbuild/core';
+import type { Header, UserConfig } from '@rspress/shared';
+import type { RouteService } from '../route/RouteService';
 
 interface LoaderOptions {
   config: UserConfig;
@@ -48,14 +50,18 @@ export async function updateSiteDataRuntimeModule(
   );
   await fs.writeFile(
     siteDataModulePath,
-    `export default ${JSON.stringify({
-      ...siteData,
-      timestamp: Date.now().toString(),
-      pages: siteData.pages.map(page =>
-        // Update page meta if the page is updated
-        page._filepath === modulePath ? { ...page, ...pageMeta } : page,
-      ),
-    })}`,
+    `export default ${JSON.stringify(
+      {
+        ...siteData,
+        timestamp: Date.now().toString(),
+        pages: siteData.pages.map(page =>
+          // Update page meta if the page is updated
+          page._filepath === modulePath ? { ...page, ...pageMeta } : page,
+        ),
+      },
+      null,
+      2,
+    )}`,
   );
 }
 
@@ -88,18 +94,15 @@ export default async function mdxLoader(
   source: string,
   callback: Rspack.LoaderContext['callback'],
 ) {
+  context.cacheable(true);
+
   const options = context.getOptions();
   const filepath = context.resourcePath;
   const { alias } = context._compiler.options.resolve;
-  context.cacheable(true);
-  let pageMeta = {
-    title: '',
-    toc: [],
-  } as PageMeta;
-
   const { config, docDirectory, checkDeadLinks, routeService, pluginDriver } =
     options;
 
+  // Separate frontmatter and content in MDX source
   const { frontmatter, content } = loadFrontMatter(
     source,
     filepath,
@@ -107,19 +110,28 @@ export default async function mdxLoader(
     true,
   );
 
+  // Replace imported built-in MDX content
   const { flattenContent, deps } = await flattenMdxContent(
     content,
     filepath,
     alias as Record<string, string>,
   );
-  // replace content
-  const replacedContent = applyReplaceRules(flattenContent, config.replaceRules);
-  // preprocessor
-  const preprocessedContent = escapeMarkdownHeadingIds(replacedContent);
 
   deps.forEach(dep => context.addDependency(dep));
 
-  let enableMdxRs;
+  // Resolve side effects caused by flattenMdxContent.
+  // Perhaps this problem should be solved within flattenMdxContent?
+  const replacedContent = applyReplaceRules(
+    flattenContent,
+    config.replaceRules,
+  );
+
+  // Support custom id like `#hello world {#custom-id}`.
+  // TODO > issue: `#hello world {#custom-id}` will also be replaced.
+  const preprocessedContent = escapeMarkdownHeadingIds(replacedContent);
+
+  // Whether to use the Rust version of the MDX compiler.
+  let enableMdxRs: boolean;
   const mdxRs = config?.markdown?.mdxRs ?? true;
   if (typeof mdxRs === 'object') {
     enableMdxRs =
@@ -130,6 +142,8 @@ export default async function mdxLoader(
 
   try {
     let compileResult: string;
+    let pageMeta = { title: '', toc: [] } as PageMeta;
+
     if (!enableMdxRs) {
       const mdxOptions = await createMDXOptions(
         docDirectory,
@@ -141,10 +155,7 @@ export default async function mdxLoader(
       );
       const compiler = createProcessor(mdxOptions);
 
-      compiler.data('pageMeta', {
-        toc: [],
-        title: '',
-      });
+      compiler.data('pageMeta', { toc: [], title: '' });
       const vFile = await compiler.process({
         value: preprocessedContent,
         path: filepath,
@@ -163,7 +174,6 @@ export default async function mdxLoader(
     } else {
       const { compile } = require('@rspress/mdx-rs');
 
-      // TODO: Cannot get correct toc from mdx which has internal components
       const { toc, links, title, code } = await compile({
         value: preprocessedContent,
         filepath,
